@@ -231,5 +231,5 @@ A: Create an account at Thordata, then go to the Dashboard and copy your Scraper
 
 ## 📜 License
 
-This project is licensed under the Apache 2.0 License.  
+This project is licensed under the MIT License.  
 See the LICENSE file for details.
