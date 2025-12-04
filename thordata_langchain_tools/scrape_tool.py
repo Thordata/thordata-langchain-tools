@@ -14,7 +14,9 @@ except ImportError:  # pragma: no cover
 
 from .serp_tool import _build_client_from_env
 
-MAX_HTML_CHARS = 10_000  # maximum number of characters to return to the LLM
+# Limit the amount of HTML we pass back to the LLM to avoid huge prompts
+MAX_HTML_CHARS = 10_000  # ~2–3k tokens, safe for most models
+
 
 class ThordataScrapeInput(BaseModel):
     """Input schema for ThordataScrapeTool."""
@@ -56,7 +58,7 @@ class ThordataScrapeTool(BaseTool):
     a single web page behind anti-bot protections.
 
     The tool returns either:
-      * Raw HTML string (for output_format='HTML'), or
+      * A (possibly truncated) HTML string (for output_format='HTML'), or
       * A JSON dict with a base64-encoded PNG (for output_format='PNG').
 
     Example:
@@ -70,7 +72,7 @@ class ThordataScrapeTool(BaseTool):
     description: str = (
         "Use Thordata Universal Scraper to fetch the content of a single web page. "
         "Supports optional JavaScript rendering and basic geo-targeting. "
-        "Returns HTML (or a base64-encoded PNG screenshot)."
+        "Returns HTML (truncated to a safe length) or a base64-encoded PNG screenshot."
     )
     args_schema: Type[BaseModel] = ThordataScrapeInput
 
@@ -98,7 +100,7 @@ class ThordataScrapeTool(BaseTool):
             block_resources=block_resources,
         )
 
-        # `universal_scrape` may return text (HTML) or bytes (PNG).
+        # PNG / binary: return a base64-encoded payload in a small JSON wrapper.
         if isinstance(result, bytes):
             encoded = base64.b64encode(result).decode("utf-8")
             return {
@@ -106,8 +108,19 @@ class ThordataScrapeTool(BaseTool):
                 "data_base64": encoded,
             }
 
-        # HTML (or text) is returned as-is.
-        return result
+        # HTML / text: truncate to avoid huge LLM inputs.
+        if isinstance(result, str):
+            if len(result) > MAX_HTML_CHARS:
+                truncated = result[:MAX_HTML_CHARS]
+                truncated += (
+                    "\n\n[Truncated to first "
+                    f"{MAX_HTML_CHARS} characters by ThordataScrapeTool]"
+                )
+                return truncated
+            return result
+
+        # Fallback: convert unexpected types to string.
+        return str(result)
 
     async def _arun(self, *args: Any, **kwargs: Any) -> Any:
         """Async interface is not implemented in this initial version."""
