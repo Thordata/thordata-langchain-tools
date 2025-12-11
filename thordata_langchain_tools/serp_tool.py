@@ -18,39 +18,32 @@ from thordata import ThordataClient
 
 class SerpSearchInput(BaseModel):
     """Input schema for SERP search."""
-    
-    query: str = Field(
-        description="The search query/keywords to search for."
-    )
+
+    query: str = Field(description="The search query/keywords to search for.")
     engine: str = Field(
         default="google",
-        description="Search engine: google, bing, yandex, duckduckgo, baidu."
+        description="Search engine: google, bing, yandex, duckduckgo, baidu.",
     )
-    num: int = Field(
-        default=10,
-        description="Number of results to return (1-100)."
-    )
+    num: int = Field(default=10, description="Number of results to return (1-100).")
     country: Optional[str] = Field(
         default=None,
-        description="Country code for localized results (e.g., 'us', 'gb')."
+        description="Country code for localized results (e.g., 'us', 'gb').",
     )
     language: Optional[str] = Field(
-        default=None,
-        description="Language code for results (e.g., 'en', 'es')."
+        default=None, description="Language code for results (e.g., 'en', 'es')."
     )
     search_type: Optional[str] = Field(
-        default=None,
-        description="Type of search: images, news, shopping, videos."
+        default=None, description="Type of search: images, news, shopping, videos."
     )
 
 
 class ThordataSerpTool(BaseTool):
     """
     LangChain tool for searching the web via Thordata SERP API.
-    
+
     This tool queries search engines (Google, Bing, etc.) and returns
     structured results including organic listings, ads, and more.
-    
+
     Example:
         >>> tool = ThordataSerpTool()
         >>> results = tool.invoke({
@@ -61,7 +54,7 @@ class ThordataSerpTool(BaseTool):
         >>> for item in results.get("organic", []):
         ...     print(item["title"], item["link"])
     """
-    
+
     name: str = "thordata_serp_search"
     description: str = (
         "Search the web using Thordata SERP API. "
@@ -70,10 +63,10 @@ class ThordataSerpTool(BaseTool):
         "Use this when you need to find information on the web."
     )
     args_schema: Type[BaseModel] = SerpSearchInput
-    
+
     # Client instance (initialized lazily)
     _client: Optional[ThordataClient] = None
-    
+
     def _get_client(self) -> ThordataClient:
         """Get or create the Thordata client."""
         if self._client is None:
@@ -83,14 +76,14 @@ class ThordataSerpTool(BaseTool):
                     "THORDATA_SCRAPER_TOKEN environment variable is required. "
                     "Get your token from the Thordata Dashboard."
                 )
-            
+
             self._client = ThordataClient(
                 scraper_token=scraper_token,
                 public_token=os.getenv("THORDATA_PUBLIC_TOKEN", ""),
                 public_key=os.getenv("THORDATA_PUBLIC_KEY", ""),
             )
         return self._client
-    
+
     def _run(
         self,
         query: str,
@@ -103,7 +96,7 @@ class ThordataSerpTool(BaseTool):
     ) -> Dict[str, Any]:
         """Execute the SERP search."""
         client = self._get_client()
-        
+
         try:
             results = client.serp_search(
                 query=query,

@@ -6,11 +6,11 @@ and proxy-based requests.
 
 Example:
     >>> from thordata_langchain_tools import ThordataSerpTool, ThordataScrapeTool
-    >>> 
+    >>>
     >>> # Search the web
     >>> serp_tool = ThordataSerpTool()
     >>> results = serp_tool.invoke({"query": "python programming"})
-    >>> 
+    >>>
     >>> # Scrape a webpage
     >>> scrape_tool = ThordataScrapeTool()
     >>> html = scrape_tool.invoke({"url": "https://example.com"})

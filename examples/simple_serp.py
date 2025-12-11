@@ -30,11 +30,13 @@ def main():
     print()
 
     # Execute search
-    results = tool.invoke({
-        "query": "Python web scraping best practices",
-        "engine": "google",
-        "num": 5,
-    })
+    results = tool.invoke(
+        {
+            "query": "Python web scraping best practices",
+            "engine": "google",
+            "num": 5,
+        }
+    )
 
     # Check for errors
     if "error" in results:

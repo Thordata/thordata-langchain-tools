@@ -28,11 +28,13 @@ def main():
     print()
 
     # Scrape the page
-    html = tool.invoke({
-        "url": url,
-        "js_render": False,
-        "max_length": 2000,
-    })
+    html = tool.invoke(
+        {
+            "url": url,
+            "js_render": False,
+            "max_length": 2000,
+        }
+    )
 
     if html.startswith("Error"):
         print(f"❌ {html}")

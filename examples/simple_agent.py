@@ -38,45 +38,49 @@ from thordata_langchain_tools import ThordataSerpTool, ThordataScrapeTool
 def search_for_homepage(query: str) -> str:
     """Use SERP tool to find a homepage URL."""
     print(f"🔍 Searching for: '{query}'")
-    
+
     serp_tool = ThordataSerpTool()
-    results = serp_tool.invoke({
-        "query": query,
-        "engine": "google",
-        "num": 3,
-    })
+    results = serp_tool.invoke(
+        {
+            "query": query,
+            "engine": "google",
+            "num": 3,
+        }
+    )
 
     organic = results.get("organic", [])
     for item in organic:
         link = item.get("link", "")
         if link and "thordata" in link.lower():
             return link
-    
+
     # Return first result if no thordata link found
     if organic:
         return organic[0].get("link", "")
-    
+
     raise RuntimeError("No results found")
 
 
 def scrape_page(url: str) -> str:
     """Use Scrape tool to get page content."""
     print(f"📄 Scraping: {url}")
-    
+
     scrape_tool = ThordataScrapeTool()
-    html = scrape_tool.invoke({
-        "url": url,
-        "js_render": False,
-        "max_length": 5000,
-    })
-    
+    html = scrape_tool.invoke(
+        {
+            "url": url,
+            "js_render": False,
+            "max_length": 5000,
+        }
+    )
+
     return html
 
 
 def summarize_with_llm(html: str, topic: str) -> str:
     """Use LLM to summarize the content."""
     print("🤖 Summarizing with LLM...")
-    
+
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
     prompt = f"""You are a helpful assistant that summarizes web content.
@@ -111,7 +115,7 @@ def main():
 
         # Step 3: Summarize
         summary = summarize_with_llm(html, "Thordata's services")
-        
+
         print()
         print("=" * 60)
         print("📋 Summary:")
