@@ -1,105 +1,127 @@
-from __future__ import annotations
+"""
+Simple LangChain Agent Example
 
-from typing import Any, Dict, List, Optional
+Demonstrates using Thordata tools with a LangChain agent to:
+1. Search for information
+2. Scrape a webpage
+3. Summarize the content
 
+Requirements:
+    pip install langchain-openai openai
+
+Usage:
+    export OPENAI_API_KEY=your_key
+    python examples/simple_agent.py
+"""
+
+import os
+import sys
 from dotenv import load_dotenv
+
+load_dotenv()
+
+# Check required environment variables
+if not os.getenv("THORDATA_SCRAPER_TOKEN"):
+    print("❌ Error: Set THORDATA_SCRAPER_TOKEN in your .env file")
+    sys.exit(1)
+
+if not os.getenv("OPENAI_API_KEY"):
+    print("❌ Error: Set OPENAI_API_KEY in your .env file")
+    sys.exit(1)
+
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage
 
 from thordata_langchain_tools import ThordataSerpTool, ThordataScrapeTool
 
-load_dotenv()  # Load OPENAI_API_KEY and THORDATA_* from a local .env file
 
-
-def find_thordata_homepage(max_results: int = 5) -> Optional[str]:
-    """
-    Use ThordataSerpTool to find the official Thordata homepage URL.
-
-    Returns:
-        The first organic result's link, or None if nothing is found.
-    """
+def search_for_homepage(query: str) -> str:
+    """Use SERP tool to find a homepage URL."""
+    print(f"🔍 Searching for: '{query}'")
+    
     serp_tool = ThordataSerpTool()
+    results = serp_tool.invoke({
+        "query": query,
+        "engine": "google",
+        "num": 3,
+    })
 
-    serp_result: Dict[str, Any] = serp_tool.invoke(
-        {
-            "query": "Thordata official homepage",
-            "engine": "google",
-            "num": max_results,
-        }
-    )
-
-    organic: List[Dict[str, Any]] = serp_result.get("organic") or []
+    organic = results.get("organic", [])
     for item in organic:
-        link = item.get("link")
-        if link:
+        link = item.get("link", "")
+        if link and "thordata" in link.lower():
             return link
+    
+    # Return first result if no thordata link found
+    if organic:
+        return organic[0].get("link", "")
+    
+    raise RuntimeError("No results found")
 
-    return None
 
-
-def scrape_url(url: str) -> str:
-    """
-    Use ThordataScrapeTool to fetch the HTML of a given URL.
-
-    The tool itself truncates overly long HTML to avoid huge LLM inputs.
-    """
+def scrape_page(url: str) -> str:
+    """Use Scrape tool to get page content."""
+    print(f"📄 Scraping: {url}")
+    
     scrape_tool = ThordataScrapeTool()
-    result = scrape_tool.invoke(
-        {
-            "url": url,
-            "js_render": False,
-            "output_format": "HTML",
-        }
-    )
-
-    if isinstance(result, str):
-        return result
-    return str(result)
+    html = scrape_tool.invoke({
+        "url": url,
+        "js_render": False,
+        "max_length": 5000,
+    })
+    
+    return html
 
 
-def summarize_html_with_llm(html: str) -> str:
-    """
-    Call OpenAI (via LangChain ChatOpenAI) exactly once to summarize the HTML.
-    We deliberately truncate the HTML to keep the token count very small,
-    so that it fits comfortably under strict TPM limits.
-    """
-    # Hard cap: we only keep the first 3000 characters of the HTML.
-    # 3000 chars ~= 1000–1500 tokens, which is safe for your 60k TPM limit.
-    MAX_HTML_FOR_LLM = 3000
-    if len(html) > MAX_HTML_FOR_LLM:
-        html = (
-            html[:MAX_HTML_FOR_LLM]
-            + "\n\n[Truncated to first "
-            f"{MAX_HTML_FOR_LLM} characters before sending to the LLM]"
-        )
-
+def summarize_with_llm(html: str, topic: str) -> str:
+    """Use LLM to summarize the content."""
+    print("🤖 Summarizing with LLM...")
+    
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
-    prompt = (
-        "You are a technical writer.\n"
-        "You will be given (a truncated portion of) the Thordata homepage HTML.\n"
-        "Based on this excerpt, summarize Thordata's core products and services "
-        "in at most 5 bullet points.\n"
-        "Be concise and concrete, and avoid marketing fluff.\n\n"
-        f"HTML content (truncated):\n{html}"
-    )
+    prompt = f"""You are a helpful assistant that summarizes web content.
+
+Based on the following HTML content, provide a brief summary about {topic}.
+Focus on the key products, services, or features mentioned.
+
+Provide your summary in 3-5 bullet points.
+
+HTML Content:
+{html[:4000]}
+"""
 
     response = llm.invoke([HumanMessage(content=prompt)])
     return response.content
 
 
+def main():
+    print("=" * 60)
+    print("🚀 Thordata LangChain Agent Demo")
+    print("=" * 60)
+    print()
+
+    try:
+        # Step 1: Search for Thordata
+        url = search_for_homepage("Thordata proxy network official site")
+        print(f"   Found URL: {url}\n")
+
+        # Step 2: Scrape the page
+        html = scrape_page(url)
+        print(f"   Scraped {len(html)} characters\n")
+
+        # Step 3: Summarize
+        summary = summarize_with_llm(html, "Thordata's services")
+        
+        print()
+        print("=" * 60)
+        print("📋 Summary:")
+        print("=" * 60)
+        print(summary)
+
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        sys.exit(1)
+
+
 if __name__ == "__main__":
-    homepage_url = find_thordata_homepage()
-
-    if not homepage_url:
-        print("Could not determine Thordata homepage URL from SERP results.")
-        raise SystemExit(1)
-
-    print(f"Detected Thordata homepage URL: {homepage_url}")
-
-    html = scrape_url(homepage_url)
-
-    summary = summarize_html_with_llm(html)
-
-    print("\n=== Summary of Thordata Services ===")
-    print(summary)
+    main()

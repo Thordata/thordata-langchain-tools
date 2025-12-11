@@ -1,152 +1,122 @@
+"""
+ThordataSerpTool - LangChain tool for SERP API.
+
+Searches Google, Bing, Yandex, DuckDuckGo, and more via Thordata.
+"""
+
 from __future__ import annotations
 
 import os
 from typing import Any, Dict, Optional, Type
 
-from dotenv import load_dotenv
 from langchain_core.tools import BaseTool
+from langchain_core.callbacks import CallbackManagerForToolRun
 from pydantic import BaseModel, Field
 
-# Try top-level imports first (future SDK versions),
-# fall back to module imports (current SDK layout).
-try:
-    from thordata import ThordataClient, Engine  # type: ignore
-except ImportError:  # pragma: no cover - defensive fallback
-    from thordata.client import ThordataClient  # type: ignore
-    from thordata.enums import Engine  # type: ignore
-
-# Load environment variables from a local .env file (for local development)
-load_dotenv()
+from thordata import ThordataClient
 
 
-def _build_client_from_env() -> ThordataClient:
-    """
-    Construct a ThordataClient instance from environment variables.
-
-    Expected environment variables:
-        THORDATA_SCRAPER_TOKEN (required)
-        THORDATA_PUBLIC_TOKEN  (optional, for async task APIs)
-        THORDATA_PUBLIC_KEY    (optional, for async task APIs)
-    """
-    scraper_token = os.getenv("THORDATA_SCRAPER_TOKEN")
-    public_token = os.getenv("THORDATA_PUBLIC_TOKEN", "")
-    public_key = os.getenv("THORDATA_PUBLIC_KEY", "")
-
-    if not scraper_token:
-        raise RuntimeError(
-            "THORDATA_SCRAPER_TOKEN is missing. "
-            "Set it in your environment or in a local .env file."
-        )
-
-    return ThordataClient(
-        scraper_token=scraper_token,
-        public_token=public_token,
-        public_key=public_key,
-    )
-
-
-class ThordataSerpInput(BaseModel):
-    """Input schema for ThordataSerpTool."""
-
+class SerpSearchInput(BaseModel):
+    """Input schema for SERP search."""
+    
     query: str = Field(
-        ...,
-        description="Search query string for the search engine.",
+        description="The search query/keywords to search for."
     )
     engine: str = Field(
         default="google",
-        description=(
-            "Search engine to use, e.g. 'google', 'bing', 'yandex', "
-            "'duckduckgo', 'google_news', etc."
-        ),
+        description="Search engine: google, bing, yandex, duckduckgo, baidu."
     )
     num: int = Field(
-        default=5,
-        ge=1,
-        le=50,
-        description="Number of organic results to fetch (1–50).",
+        default=10,
+        description="Number of results to return (1-100)."
     )
-    location: Optional[str] = Field(
+    country: Optional[str] = Field(
         default=None,
-        description="Optional location string (e.g. 'United States', 'London').",
+        description="Country code for localized results (e.g., 'us', 'gb')."
+    )
+    language: Optional[str] = Field(
+        default=None,
+        description="Language code for results (e.g., 'en', 'es')."
     )
     search_type: Optional[str] = Field(
         default=None,
-        description=(
-            "Optional search vertical, passed through as the 'type' parameter. "
-            "Examples: 'news', 'shopping', 'images', 'videos'."
-        ),
+        description="Type of search: images, news, shopping, videos."
     )
 
 
 class ThordataSerpTool(BaseTool):
     """
-    LangChain Tool: Web search via Thordata SERP API.
-
-    This tool queries commercial search engines (Google/Bing/Yandex/DDG, etc.)
-    through Thordata's SERP API and returns the raw JSON response.
-
+    LangChain tool for searching the web via Thordata SERP API.
+    
+    This tool queries search engines (Google, Bing, etc.) and returns
+    structured results including organic listings, ads, and more.
+    
     Example:
-        from thordata_langchain_tools import ThordataSerpTool
-
-        tool = ThordataSerpTool()
-        result = tool.invoke(
-            {
-                "query": "Thordata proxies",
-                "engine": "google",
-                "num": 3,
-            }
-        )
+        >>> tool = ThordataSerpTool()
+        >>> results = tool.invoke({
+        ...     "query": "best python libraries",
+        ...     "engine": "google",
+        ...     "num": 5
+        ... })
+        >>> for item in results.get("organic", []):
+        ...     print(item["title"], item["link"])
     """
-
+    
     name: str = "thordata_serp_search"
     description: str = (
-        "Use Thordata SERP API to search the web (Google/Bing/Yandex/DuckDuckGo). "
-        "Returns the full JSON SERP response, including organic results, ads, "
-        "and metadata. Useful for real-time web search."
+        "Search the web using Thordata SERP API. "
+        "Supports Google, Bing, Yandex, DuckDuckGo, and Baidu. "
+        "Returns structured search results including titles, links, and snippets. "
+        "Use this when you need to find information on the web."
     )
-    args_schema: Type[BaseModel] = ThordataSerpInput
-
-    client: ThordataClient  # initialized in __init__
-
-    def __init__(self, client: Optional[ThordataClient] = None, **kwargs: Any) -> None:
-        if client is None:
-            client = _build_client_from_env()
-        super().__init__(client=client, **kwargs)
-
+    args_schema: Type[BaseModel] = SerpSearchInput
+    
+    # Client instance (initialized lazily)
+    _client: Optional[ThordataClient] = None
+    
+    def _get_client(self) -> ThordataClient:
+        """Get or create the Thordata client."""
+        if self._client is None:
+            scraper_token = os.getenv("THORDATA_SCRAPER_TOKEN")
+            if not scraper_token:
+                raise ValueError(
+                    "THORDATA_SCRAPER_TOKEN environment variable is required. "
+                    "Get your token from the Thordata Dashboard."
+                )
+            
+            self._client = ThordataClient(
+                scraper_token=scraper_token,
+                public_token=os.getenv("THORDATA_PUBLIC_TOKEN", ""),
+                public_key=os.getenv("THORDATA_PUBLIC_KEY", ""),
+            )
+        return self._client
+    
     def _run(
         self,
         query: str,
         engine: str = "google",
-        num: int = 5,
-        location: Optional[str] = None,
+        num: int = 10,
+        country: Optional[str] = None,
+        language: Optional[str] = None,
         search_type: Optional[str] = None,
+        run_manager: Optional[CallbackManagerForToolRun] = None,
     ) -> Dict[str, Any]:
-        """Synchronous tool call."""
-        engine_key = engine.lower()
-
-        # Map common engine strings to the Engine enum.
-        engine_enum: Any = {
-            "google": Engine.GOOGLE,
-            "bing": Engine.BING,
-            "yandex": Engine.YANDEX,
-            "duckduckgo": Engine.DUCKDUCKGO,
-        }.get(engine_key, engine_key)  # fall back to plain string, e.g. "google_news"
-
-        extra_params: Dict[str, Any] = {}
-        if location:
-            extra_params["location"] = location
-        if search_type:
-            extra_params["type"] = search_type
-
-        results = self.client.serp_search(
-            query=query,
-            engine=engine_enum,
-            num=num,
-            **extra_params,
-        )
-        # Return the raw JSON dict; the LLM can decide which fields to use.
-        return results
-
-    async def _arun(self, *args: Any, **kwargs: Any) -> Any:
-        """Async interface is not implemented in this initial version."""
-        raise NotImplementedError("ThordataSerpTool does not support async yet.")
+        """Execute the SERP search."""
+        client = self._get_client()
+        
+        try:
+            results = client.serp_search(
+                query=query,
+                engine=engine,
+                num=num,
+                country=country,
+                language=language,
+                search_type=search_type,
+            )
+            return results
+        except Exception as e:
+            return {
+                "error": str(e),
+                "query": query,
+                "engine": engine,
+            }
