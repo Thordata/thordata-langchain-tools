@@ -41,7 +41,7 @@ python -m pip install -e .
 
 This will install:
 
-- `thordata-sdk>=0.3.1` — official Python SDK for Thordata
+- `thordata-sdk>=0.5.0` — official Python SDK for Thordata
 - `langchain>=0.3.0` — LangChain core
 - `python-dotenv` — for loading local .env files
 
@@ -122,7 +122,7 @@ html = tool.invoke(
     {
         "url": "https://www.thordata.com",
         "js_render": False,
-        "output_format": "HTML",
+        "output_format": "html",
     }
 )
 
