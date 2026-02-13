@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "thordata-langchain-tools"
-version = "0.2.0"
+version = "1.1.0"
 description = "LangChain tools powered by Thordata - SERP API, Web Scraping, and Proxy Network."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
   {name = "Thordata Team", email = "support@thordata.com"}
@@ -21,22 +21,24 @@ keywords = [
     "ai",
     "llm",
     "agent",
+    "async",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "License :: OSI Approved :: MIT License",
 ]
 dependencies = [
-    "thordata-sdk>=1.1.0",
-    "langchain-core>=0.2.0",
+    "thordata-sdk>=1.8.4",
+    "langchain-core>=0.3.0",
     "python-dotenv>=1.0.0",
+    "markdownify>=0.11.6",
+    "html2text>=2024.2.26",
 ]
 
 [project.optional-dependencies]
@@ -65,7 +67,7 @@ target-version = ['py39', 'py310', 'py311', 'py312']
 
 [tool.ruff]
 line-length = 88
-target-version = "py39"
+target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "W", "F"]

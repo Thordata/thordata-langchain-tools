@@ -29,12 +29,14 @@ def main():
     print("🔍 Searching for: 'Python web scraping best practices'")
     print()
 
-    # Execute search
+    # Execute search with advanced features
     results = tool.invoke(
         {
             "query": "Python web scraping best practices",
             "engine": "google",
             "num": 5,
+            "ai_overview": True,
+            "country": "us",
         }
     )
 

@@ -27,11 +27,12 @@ def main():
     print(f"🌐 Scraping: {url}")
     print()
 
-    # Scrape the page
+    # Scrape the page with JS rendering
     html = tool.invoke(
         {
             "url": url,
-            "js_render": False,
+            "js_render": True,
+            "output_format": "html",
             "max_length": 2000,
         }
     )
