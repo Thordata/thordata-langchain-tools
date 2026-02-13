@@ -7,7 +7,7 @@ Usage:
     # With ZhipuAI
     export ZHIPU_API_KEY=your_key
     python examples/simple_agent_unified.py zhipu
-    
+
     # With OpenRouter (when available)
     export OPENROUTER_API_KEY=your_key
     python examples/simple_agent_unified.py openrouter
@@ -18,6 +18,7 @@ import sys
 
 if sys.platform == "win32":
     import io
+
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 from dotenv import load_dotenv
@@ -42,6 +43,7 @@ content = markdown.invoke({"url": url, "max_chars": 3000})
 # Summarize
 if provider == "zhipu" and os.getenv("ZHIPU_API_KEY"):
     from zhipuai import ZhipuAI
+
     client = ZhipuAI(api_key=os.getenv("ZHIPU_API_KEY"))
     response = client.chat.completions.create(
         model="glm-4-flash",
@@ -50,6 +52,7 @@ if provider == "zhipu" and os.getenv("ZHIPU_API_KEY"):
     print(response.choices[0].message.content)
 elif provider == "openrouter" and os.getenv("OPENROUTER_API_KEY"):
     from openai import OpenAI
+
     client = OpenAI(
         api_key=os.getenv("OPENROUTER_API_KEY"),
         base_url="https://openrouter.ai/api/v1",

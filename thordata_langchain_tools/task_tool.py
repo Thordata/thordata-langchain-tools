@@ -19,7 +19,9 @@ from thordata import ThordataClient
 class TaskRunInput(BaseModel):
     """Input schema for task execution."""
 
-    tool_key: str = Field(description="Tool key (e.g., 'amazon.product_by_url', 'youtube.video_info')")
+    tool_key: str = Field(
+        description="Tool key (e.g., 'amazon.product_by_url', 'youtube.video_info')"
+    )
     parameters: dict[str, Any] = Field(
         default_factory=dict,
         description="Task parameters as dictionary",

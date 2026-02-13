@@ -99,7 +99,7 @@ class ThordataAccountTool(BaseTool):
                     "usage_statistics": None,
                     "note": "Usage statistics unavailable",
                 }
-            except:
+            except Exception:
                 return {
                     "error": str(e),
                 }

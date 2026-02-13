@@ -23,6 +23,7 @@ import sys
 
 if sys.platform == "win32":
     import io
+
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
@@ -50,27 +51,27 @@ from thordata_langchain_tools import ThordataSerpTool, ThordataMarkdownTool
 def search_and_scrape(query: str):
     """Search and scrape content."""
     print(f"🔍 Searching for: '{query}'")
-    
+
     serp = ThordataSerpTool()
     results = serp.invoke({"query": query, "num": 1})
-    
+
     if "error" in results or not results.get("organic"):
         print("   ❌ Search failed")
         return None, None
-    
+
     url = results["organic"][0]["link"]
     title = results["organic"][0].get("title", "")
     print(f"   ✓ Found: {title}")
     print(f"   🔗 {url}")
-    
-    print(f"📝 Converting to Markdown...")
+
+    print("📝 Converting to Markdown...")
     markdown = ThordataMarkdownTool()
     content = markdown.invoke({"url": url, "max_chars": 6000})
-    
+
     if content.startswith("Error"):
         print("   ❌ Scrape failed")
         return None, None
-    
+
     print(f"   ✓ Converted {len(content)} characters")
     return content, title
 
@@ -85,18 +86,18 @@ def summarize_with_openrouter(content: str, topic: str):
         "deepseek/deepseek-r1-0528:free",
         "z-ai/glm-4.5-air:free",
     ]
-    
+
     client = OpenAI(
         api_key=os.getenv("OPENROUTER_API_KEY"),
         base_url="https://openrouter.ai/api/v1",
     )
-    
+
     prompt = f"""Summarize the following content about "{topic}" in 3-5 bullet points:
 
 {content[:5000]}
 
 Summary:"""
-    
+
     for model in models:
         try:
             print(f"🤖 Trying {model}...")
@@ -105,16 +106,16 @@ Summary:"""
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.3,
             )
-            print(f"   ✓ Success!")
+            print("   ✓ Success!")
             return response.choices[0].message.content
         except Exception as e:
             error = str(e)
             if "rate-limited" in error or "429" in error:
-                print(f"   ⚠️  Rate-limited, trying next...")
+                print("   ⚠️  Rate-limited, trying next...")
                 continue
             print(f"   ⚠️  Error: {error[:80]}...")
             continue
-    
+
     return None
 
 
@@ -123,20 +124,20 @@ def main():
     print("🚀 Thordata + OpenRouter Agent Demo")
     print("=" * 70)
     print()
-    
+
     try:
         content, title = search_and_scrape("Thordata proxy network features")
         if not content:
             sys.exit(1)
-        
+
         print()
         summary = summarize_with_openrouter(content, title or "Thordata")
-        
+
         if not summary:
             print("❌ All models failed. Content preview:")
             print(content[:500])
             sys.exit(1)
-        
+
         print()
         print("=" * 70)
         print("📋 Summary:")
@@ -146,10 +147,11 @@ def main():
         print("=" * 70)
         print("✅ Demo completed!")
         print("=" * 70)
-        
+
     except Exception as e:
         print(f"\n❌ Error: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 

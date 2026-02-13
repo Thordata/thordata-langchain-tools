@@ -30,51 +30,55 @@ def main():
     # Example 1: Batch Scraping
     print("📦 Example 1: Batch Scraping")
     print("-" * 60)
-    
+
     scrape_tool = ThordataBatchScrapeTool()
-    
+
     urls = [
         "https://example.com",
         "https://example.org",
         "https://example.net",
     ]
-    
+
     print(f"Scraping {len(urls)} URLs concurrently...")
-    results = scrape_tool.invoke({
-        "urls": urls,
-        "js_render": True,
-        "concurrency": 3,
-    })
-    
+    results = scrape_tool.invoke(
+        {
+            "urls": urls,
+            "js_render": True,
+            "concurrency": 3,
+        }
+    )
+
     print(f"\n✅ Completed {results['total']} requests")
     for result in results["results"]:
         status = "✓" if result["ok"] else "✗"
         print(f"  {status} {result['url']}")
         if not result["ok"]:
             print(f"    Error: {result['error']}")
-    
+
     print()
-    
+
     # Example 2: Batch SERP Search
     print("🔍 Example 2: Batch SERP Search")
     print("-" * 60)
-    
+
     serp_tool = ThordataBatchSerpTool()
-    
+
     queries = [
         "Python programming",
         "JavaScript frameworks",
         "Rust language",
     ]
-    
+
     print(f"Searching {len(queries)} queries concurrently...")
-    results = serp_tool.invoke({
-        "queries": queries,
-        "engine": "google",
-        "num": 5,
-        "concurrency": 3,
-    })
-    
+    results = serp_tool.invoke(
+        {
+            "queries": queries,
+            "engine": "google",
+            "num": 5,
+            "concurrency": 3,
+        }
+    )
+
     print(f"\n✅ Completed {results['total']} searches")
     for result in results["results"]:
         status = "✓" if result["ok"] else "✗"

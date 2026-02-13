@@ -14,7 +14,6 @@ from langchain_core.callbacks import CallbackManagerForToolRun
 from pydantic import BaseModel, Field
 
 from thordata import ThordataClient
-from markdownify import markdownify as md
 from html2text import HTML2Text
 
 
@@ -39,10 +38,12 @@ class MarkdownInput(BaseModel):
         description="Country code for geo-targeted request (e.g., 'us', 'gb', 'jp').",
     )
     block_resources: Optional[str] = Field(
-        default=None, description="Comma-separated resource types to block (e.g., 'image,css')."
+        default=None,
+        description="Comma-separated resource types to block (e.g., 'image,css').",
     )
     wait_for: Optional[str] = Field(
-        default=None, description="CSS selector or text to wait for before returning content."
+        default=None,
+        description="CSS selector or text to wait for before returning content.",
     )
 
 
@@ -101,7 +102,7 @@ class ThordataMarkdownTool(BaseTool):
         h.ignore_images = False
         h.body_width = 0  # Don't wrap lines
         markdown = h.handle(html)
-        
+
         # Clean up extra whitespace
         lines = markdown.split("\n")
         cleaned_lines = []
@@ -111,7 +112,7 @@ class ThordataMarkdownTool(BaseTool):
                 cleaned_lines.append(line)
             elif cleaned_lines and cleaned_lines[-1]:  # Keep single blank lines
                 cleaned_lines.append("")
-        
+
         return "\n".join(cleaned_lines)
 
     def _run(
@@ -142,14 +143,14 @@ class ThordataMarkdownTool(BaseTool):
             )
 
             html_str = str(html) if not isinstance(html, str) else html
-            
+
             # Convert to Markdown
             markdown = self._html_to_markdown(html_str)
-            
+
             # Truncate if needed
             if len(markdown) > max_chars:
                 markdown = markdown[:max_chars] + "\n\n[Content truncated...]"
-            
+
             return markdown
 
         except Exception as e:

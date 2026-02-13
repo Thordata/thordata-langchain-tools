@@ -14,7 +14,7 @@ from langchain_core.tools import BaseTool
 from langchain_core.callbacks import CallbackManagerForToolRun
 from pydantic import BaseModel, Field
 
-from thordata import AsyncThordataClient, ThordataClient, Engine, SerpRequest
+from thordata import AsyncThordataClient, Engine, SerpRequest
 
 
 class BatchScrapeInput(BaseModel):
@@ -114,6 +114,7 @@ class ThordataBatchScrapeTool(BaseTool):
         run_manager: Optional[CallbackManagerForToolRun] = None,
     ) -> dict[str, Any]:
         """Execute batch scraping."""
+
         async def _batch_scrape() -> dict[str, Any]:
             client = self._get_client()
             # Ensure client is initialized
@@ -134,7 +135,11 @@ class ThordataBatchScrapeTool(BaseTool):
                                 "index": i,
                                 "url": url,
                                 "ok": True,
-                                "output": str(data) if not isinstance(data, (dict, bytes)) else data,
+                                "output": (
+                                    str(data)
+                                    if not isinstance(data, (dict, bytes))
+                                    else data
+                                ),
                             }
                         except Exception as e:
                             return {
@@ -226,6 +231,7 @@ class ThordataBatchSerpTool(BaseTool):
         run_manager: Optional[CallbackManagerForToolRun] = None,
     ) -> dict[str, Any]:
         """Execute batch SERP search."""
+
         async def _batch_serp() -> dict[str, Any]:
             client = self._get_client()
             # Ensure client is initialized

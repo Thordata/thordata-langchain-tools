@@ -26,7 +26,9 @@ class SerpSearchInput(BaseModel):
         description="Search engine: google, bing, yandex, duckduckgo, baidu.",
     )
     num: int = Field(default=10, description="Number of results to return (1-100).")
-    start: int = Field(default=0, description="Starting position for results (pagination).")
+    start: int = Field(
+        default=0, description="Starting position for results (pagination)."
+    )
     output_format: str = Field(
         default="json",
         description="Output format: 'json' (structured), 'html' (raw HTML), 'light_json' (minimal), or 'both'.",
@@ -42,10 +44,12 @@ class SerpSearchInput(BaseModel):
         default=None, description="Device type: 'desktop', 'mobile', or 'tablet'."
     )
     search_type: Optional[str] = Field(
-        default=None, description="Type of search: 'images', 'news', 'shopping', 'videos'."
+        default=None,
+        description="Type of search: 'images', 'news', 'shopping', 'videos'.",
     )
     location: Optional[str] = Field(
-        default=None, description="Location string for local search (e.g., 'New York, NY')."
+        default=None,
+        description="Location string for local search (e.g., 'New York, NY').",
     )
     google_domain: Optional[str] = Field(
         default=None, description="Google domain (e.g., 'google.com', 'google.co.jp')."

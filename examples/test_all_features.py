@@ -2,11 +2,11 @@
 Comprehensive test of all features including new tools.
 """
 
-import os
 import sys
 
 if sys.platform == "win32":
     import io
+
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 from dotenv import load_dotenv
@@ -17,8 +17,6 @@ from thordata_langchain_tools import (
     ThordataSerpTool,
     ThordataScrapeTool,
     ThordataMarkdownTool,
-    ThordataBatchScrapeTool,
-    ThordataBatchSerpTool,
     ThordataAccountTool,
 )
 

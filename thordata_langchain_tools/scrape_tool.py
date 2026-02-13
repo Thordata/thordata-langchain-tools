@@ -35,13 +35,15 @@ class ScrapeInput(BaseModel):
         description="Country code for geo-targeted request (e.g., 'us', 'gb', 'jp').",
     )
     wait_for: Optional[str] = Field(
-        default=None, description="CSS selector or text to wait for before returning content."
+        default=None,
+        description="CSS selector or text to wait for before returning content.",
     )
     wait_ms: Optional[int] = Field(
         default=None, description="Wait time in milliseconds before capture."
     )
     block_resources: Optional[str] = Field(
-        default=None, description="Comma-separated resource types to block (e.g., 'image,css')."
+        default=None,
+        description="Comma-separated resource types to block (e.g., 'image,css').",
     )
     follow_redirect: Optional[bool] = Field(
         default=None, description="Control redirect following behavior."
@@ -50,7 +52,8 @@ class ScrapeInput(BaseModel):
         default=None, description="Clean JavaScript/CSS from responses."
     )
     headers: Optional[list[str]] = Field(
-        default=None, description="Custom request headers as list of 'Key: Value' strings."
+        default=None,
+        description="Custom request headers as list of 'Key: Value' strings.",
     )
     cookies: Optional[list[str]] = Field(
         default=None, description="Custom cookies as list of 'name=value' strings."
@@ -167,13 +170,21 @@ class ThordataScrapeTool(BaseTool):
                         result["png_base64"] = base64.b64encode(content).decode("utf-8")
                         result["png_size"] = len(content)
                     elif fmt == "html":
-                        html_str = str(content) if not isinstance(content, str) else content
+                        html_str = (
+                            str(content) if not isinstance(content, str) else content
+                        )
                         # Truncate HTML if needed
                         if len(html_str) > max_length:
-                            html_str = html_str[:max_length] + "\n\n[Content truncated...]"
+                            html_str = (
+                                html_str[:max_length] + "\n\n[Content truncated...]"
+                            )
                         result["html"] = html_str
                     else:
-                        result[fmt] = str(content) if not isinstance(content, (str, bytes)) else content
+                        result[fmt] = (
+                            str(content)
+                            if not isinstance(content, (str, bytes))
+                            else content
+                        )
                 return result
 
             # Single format output
