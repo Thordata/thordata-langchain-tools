@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12"]
 
     steps:
       - uses: actions/checkout@v4
@@ -41,7 +41,7 @@ jobs:
 
       - name: Verify imports
         run: |
-          python -c "from thordata_langchain_tools import ThordataSerpTool, ThordataScrapeTool, ThordataUniversalTool, ThordataProxyTool; print('✅ All imports OK')"
+          python -c "from thordata_langchain_tools import ThordataSerpTool, ThordataScrapeTool, ThordataMarkdownTool, ThordataBatchScrapeTool, ThordataBatchSerpTool, ThordataProxyTool, ThordataTaskTool, ThordataAccountTool; print('✅ All imports OK')"
 
   build:
     runs-on: ubuntu-latest

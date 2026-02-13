@@ -26,7 +26,7 @@ Example:
     >>> markdown = markdown_tool.invoke({"url": "https://example.com"})
 """
 
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 
 from .serp_tool import ThordataSerpTool
 from .scrape_tool import ThordataScrapeTool

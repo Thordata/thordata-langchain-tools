@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1] - 2026-02-13
+
+### Fixed
+- Fixed CI workflow: Updated Python versions (3.10+), fixed import verification
+- Updated test suite to match current tool structure
+- Removed references to deprecated ThordataUniversalTool
+
 ## [1.1.0] - 2026-02-13
 
 ### Added

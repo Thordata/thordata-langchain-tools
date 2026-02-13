@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "thordata-langchain-tools"
-version = "1.1.0"
+version = "1.1.1"
 description = "LangChain tools powered by Thordata - SERP API, Web Scraping, and Proxy Network."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -63,7 +63,7 @@ include = ["thordata_langchain_tools*"]
 
 [tool.black]
 line-length = 88
-target-version = ['py39', 'py310', 'py311', 'py312']
+target-version = ['py310', 'py311', 'py312']
 
 [tool.ruff]
 line-length = 88

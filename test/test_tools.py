@@ -7,8 +7,9 @@ from unittest.mock import MagicMock, patch
 from thordata_langchain_tools import (
     ThordataSerpTool,
     ThordataScrapeTool,
-    ThordataUniversalTool,
+    ThordataMarkdownTool,
     ThordataProxyTool,
+    ThordataAccountTool,
 )
 
 
@@ -36,7 +37,7 @@ class TestThordataSerpTool:
         """Test successful SERP search."""
         # Setup mock
         mock_client = MagicMock()
-        mock_client.serp_search.return_value = {
+        mock_client.serp_search_advanced.return_value = {
             "organic": [{"title": "Test Result", "link": "https://example.com"}]
         }
         mock_client_class.return_value = mock_client
@@ -48,13 +49,13 @@ class TestThordataSerpTool:
         # Verify
         assert "organic" in result
         assert len(result["organic"]) == 1
-        mock_client.serp_search.assert_called_once()
+        mock_client.serp_search_advanced.assert_called_once()
 
     @patch("thordata_langchain_tools.serp_tool.ThordataClient")
     def test_run_error_handling(self, mock_client_class):
         """Test error handling in SERP search."""
         mock_client = MagicMock()
-        mock_client.serp_search.side_effect = Exception("API Error")
+        mock_client.serp_search_advanced.side_effect = Exception("API Error")
         mock_client_class.return_value = mock_client
 
         tool = ThordataSerpTool()
@@ -80,20 +81,20 @@ class TestThordataScrapeTool:
     def test_run_success(self, mock_client_class):
         """Test successful scrape."""
         mock_client = MagicMock()
-        mock_client.universal_scrape.return_value = "<html><body>Test</body></html>"
+        mock_client.universal.scrape.return_value = "<html><body>Test</body></html>"
         mock_client_class.return_value = mock_client
 
         tool = ThordataScrapeTool()
         result = tool._run(url="https://example.com", js_render=False, max_length=1000)
 
         assert "html" in result.lower()
-        mock_client.universal_scrape.assert_called_once()
+        mock_client.universal.scrape.assert_called_once()
 
     @patch("thordata_langchain_tools.scrape_tool.ThordataClient")
     def test_run_truncates_long_content(self, mock_client_class):
         """Test that long content is truncated."""
         mock_client = MagicMock()
-        mock_client.universal_scrape.return_value = "x" * 100000
+        mock_client.universal.scrape.return_value = "x" * 100000
         mock_client_class.return_value = mock_client
 
         tool = ThordataScrapeTool()
@@ -103,46 +104,31 @@ class TestThordataScrapeTool:
         assert "truncated" in result.lower()
 
 
-class TestThordataUniversalTool:
-    """Tests for ThordataUniversalTool."""
+class TestThordataMarkdownTool:
+    """Tests for ThordataMarkdownTool."""
 
     def test_tool_name(self):
         """Test tool has correct name."""
-        tool = ThordataUniversalTool()
-        assert tool.name == "thordata_universal_scrape"
+        tool = ThordataMarkdownTool()
+        assert tool.name == "thordata_fetch_markdown"
 
     def test_tool_description(self):
         """Test tool has description."""
-        tool = ThordataUniversalTool()
-        assert (
-            "scrape" in tool.description.lower()
-            or "scraping" in tool.description.lower()
-        )
+        tool = ThordataMarkdownTool()
+        assert "markdown" in tool.description.lower()
 
-    @patch("thordata_langchain_tools.universal_tool.ThordataClient")
-    def test_run_with_js_render(self, mock_client_class):
-        """Test scrape with JS rendering."""
+    @patch("thordata_langchain_tools.markdown_tool.ThordataClient")
+    def test_run_success(self, mock_client_class):
+        """Test successful markdown conversion."""
         mock_client = MagicMock()
-        mock_client.universal_scrape.return_value = "<html>Rendered</html>"
+        mock_client.universal.scrape.return_value = "<html><body>Test</body></html>"
         mock_client_class.return_value = mock_client
 
-        tool = ThordataUniversalTool()
-        result = tool._run(
-            url="https://example.com",
-            js_render=True,
-            output_format="html",
-            country="us",
-            wait_for=".content",
-        )
+        tool = ThordataMarkdownTool()
+        result = tool._run(url="https://example.com", js_render=False, max_chars=1000)
 
-        assert "html" in result.lower()
-        mock_client.universal_scrape.assert_called_once_with(
-            url="https://example.com",
-            js_render=True,
-            output_format="html",
-            country="us",
-            wait_for=".content",
-        )
+        assert isinstance(result, str)
+        assert len(result) > 0
 
 
 class TestThordataProxyTool:
@@ -173,3 +159,31 @@ class TestThordataProxyTool:
         result = tool._run(url="https://httpbin.org/ip")
 
         assert "1.2.3.4" in result
+
+
+class TestThordataAccountTool:
+    """Tests for ThordataAccountTool."""
+
+    def test_tool_name(self):
+        """Test tool has correct name."""
+        tool = ThordataAccountTool()
+        assert tool.name == "thordata_account_info"
+
+    def test_tool_description(self):
+        """Test tool has description."""
+        tool = ThordataAccountTool()
+        assert "account" in tool.description.lower()
+
+    @patch("thordata_langchain_tools.account_tool.ThordataClient")
+    def test_run_success(self, mock_client_class):
+        """Test successful account info retrieval."""
+        mock_client = MagicMock()
+        mock_client.get_traffic_balance.return_value = 1000.0
+        mock_client.account.get_usage_statistics.return_value = {"total": 500}
+        mock_client_class.return_value = mock_client
+
+        tool = ThordataAccountTool()
+        result = tool._run()
+
+        assert "traffic_balance" in result
+        assert result["traffic_balance"] == 1000.0
