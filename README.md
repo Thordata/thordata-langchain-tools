@@ -1,6 +1,6 @@
 # Thordata LangChain Tools
 
-LangChain tools powered by [Thordata](https://www.thordata.com) - SERP API, Universal Scraping API, and Proxy Network.
+LangChain tools powered by [Thordata](https://www.thordata.com/products/serp-api/langchain-integration?op=flora&from=github) - [SERP API](https://www.thordata.com/products/serp-api?op=flora&from=github), [Universal Scraping API](https://www.thordata.com/products/web-scraper?op=flora&from=github), and [Proxy Network](https://www.thordata.com/products/residential-proxies?op=flora&from=github).
 
 Use these tools to give your LangChain agents **real-time web search**, **robust web page scraping**, **batch processing**, and **AI-powered analysis** capabilities via Thordata's global proxy network.
 
@@ -420,7 +420,7 @@ A: The batch tools use async operations internally for better performance. For f
 A: The project requires Python 3.10+ for modern type hints and async support.
 
 **Q: How do I get Thordata credentials?**  
-A: Create an account at [Thordata](https://www.thordata.com), then go to the Dashboard and copy your Scraper Token, Public Token, and Public Key from the API / credentials section.
+A: Create an account at [Thordata](https://www.thordata.com/?ls=github&lk=thordata), then go to the Dashboard and copy your Scraper Token, Public Token, and Public Key from the API / credentials section.
 
 **Q: What's the difference between ThordataScrapeTool and ThordataMarkdownTool?**  
 A: `ThordataScrapeTool` returns raw HTML (or PNG screenshots), while `ThordataMarkdownTool` converts HTML to clean Markdown text optimized for LLM consumption.
@@ -473,7 +473,7 @@ See the LICENSE file for details.
 
 ## 🔗 Links
 
-- [Thordata Website](https://www.thordata.com)
+- [Thordata Website](https://www.thordata.com/?ls=github&lk=thordata)
 - [Thordata Python SDK](https://github.com/Thordata/thordata-python-sdk)
 - [Thordata MCP Server](https://github.com/Thordata/thordata-mcp-server)
 - [LangChain Documentation](https://python.langchain.com/)
